@@ -1,0 +1,294 @@
+.overview-container {
+  padding: 16px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.overview-container h2 {
+  color: #132A13;
+  margin-bottom: 20px;
+  font-weight: bold;
+  font-size: 1.5rem;
+  padding-left: 10px;
+}
+
+.summary-cards {
+  margin-bottom: 20px;
+}
+
+.summary-cards .ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.summary-cards .ant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.summary-cards .ant-card-body {
+  padding: 16px;
+}
+
+.summary-cards .ant-statistic {
+  text-align: center;
+}
+
+.summary-cards .ant-statistic-title {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  color: #5a5a5a;
+}
+
+.summary-cards .ant-statistic-content {
+  font-size: 1.5rem;
+}
+
+.overview-content {
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  margin-bottom: 16px;
+}
+
+.chart-card .ant-card-head {
+  background-color: #f9f9f9;
+  border-bottom: 2px solid #4F772D;
+  padding: 0 16px;
+  min-height: auto;
+}
+
+.chart-card .ant-card-head-title {
+  color: #132A13;
+  font-weight: 600;
+  padding: 12px 0;
+  font-size: 1.1rem;
+  white-space: normal;
+}
+
+.chart-card .ant-card-body {
+  padding: 16px;
+}
+
+.category-progress {
+  padding: 10px 0;
+}
+
+.progress-item {
+  margin-bottom: 15px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+.progress-label span:first-child {
+  color: #132A13;
+  margin-right: 8px;
+}
+
+.progress-label span:last-child {
+  color: #4F772D;
+  font-weight: bold;
+}
+
+/* Table styles for mobile */
+.chart-card .ant-table {
+  font-size: 0.85rem;
+}
+
+.chart-card .ant-table-thead > tr > th {
+  padding: 8px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.chart-card .ant-table-tbody > tr > td {
+  padding: 8px;
+}
+
+/* Responsive design for tablets (768px and below) */
+@media (max-width: 768px) {
+  .overview-container {
+    padding: 12px;
+  }
+  
+  .overview-container h2 {
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+  }
+  
+  .summary-cards .ant-row {
+    margin: 0 -8px;
+  }
+  
+  .summary-cards .ant-col {
+    padding: 0 8px;
+    margin-bottom: 16px;
+  }
+  
+  .summary-cards .ant-statistic-title {
+    font-size: 0.8rem;
+  }
+  
+  .summary-cards .ant-statistic-content {
+    font-size: 1.3rem;
+  }
+  
+  .overview-content .ant-row {
+    margin: 0 -8px;
+  }
+  
+  .overview-content .ant-col {
+    padding: 0 8px;
+    margin-bottom: 16px;
+  }
+  
+  .chart-card .ant-card-head-title {
+    font-size: 1rem;
+  }
+  
+  .chart-card .ant-table {
+    font-size: 0.8rem;
+  }
+  
+  .chart-card .ant-table-thead > tr > th {
+    font-size: 0.85rem;
+    padding: 6px;
+  }
+  
+  .chart-card .ant-table-tbody > tr > td {
+    padding: 6px;
+  }
+}
+
+/* Responsive design for mobile phones (576px and below) */
+@media (max-width: 576px) {
+  .overview-container {
+    padding: 10px;
+  }
+  
+  .overview-container h2 {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+  }
+  
+  .summary-cards .ant-col {
+    flex: 0 0 50%;
+    max-width: 50%;
+    margin-bottom: 12px;
+  }
+  
+  .summary-cards .ant-statistic-title {
+    font-size: 0.75rem;
+  }
+  
+  .summary-cards .ant-statistic-content {
+    font-size: 1.1rem;
+  }
+  
+  .overview-content .ant-col {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .chart-card .ant-card-head-title {
+    font-size: 0.95rem;
+  }
+  
+  .chart-card .ant-table {
+    font-size: 0.75rem;
+  }
+  
+  .chart-card .ant-table-thead > tr > th {
+    font-size: 0.8rem;
+    padding: 4px;
+  }
+  
+  .chart-card .ant-table-tbody > tr > td {
+    padding: 4px;
+  }
+  
+  /* Make tables horizontally scrollable on small devices */
+  .chart-card .ant-table-container {
+    overflow-x: auto;
+  }
+  
+  .chart-card .ant-table {
+    min-width: 500px; /* Force horizontal scroll for very small screens */
+  }
+  
+  .progress-label {
+    flex-direction: column;
+  }
+  
+  .progress-label span:first-child {
+    margin-bottom: 4px;
+  }
+}
+
+/* Very small devices (350px and below) */
+@media (max-width: 350px) {
+  .summary-cards .ant-col {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .summary-cards .ant-statistic-title {
+    font-size: 0.8rem;
+  }
+  
+  .summary-cards .ant-statistic-content {
+    font-size: 1.2rem;
+  }
+  
+  .chart-card .ant-table {
+    min-width: 320px;
+  }
+}
+
+/* Fix for Ant Design table responsiveness */
+.ant-table-wrapper {
+  overflow-x: auto;
+}
+
+/* Improve touch targets for mobile */
+@media (max-width: 768px) {
+  .ant-btn,
+  .ant-card,
+  .ant-table-cell {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 12px 8px;
+  }
+}
+
+/* Prevent text overflow in tables */
+.ant-table-tbody > tr > td {
+  word-break: break-word;
+}
+
+/* Ensure charts maintain aspect ratio */
+.chart-container {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+}
+
+/* Loading state improvements */
+.overview-container .ant-spin-container {
+  position: relative;
+}

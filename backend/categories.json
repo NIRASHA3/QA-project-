@@ -1,0 +1,32 @@
+[
+  {
+    "name": "fruits",
+    "imageURL": "https://img.freepik.com/premium-photo/healthy-tasty-fruits-vegetables_135427-4546.jpg",
+    "description": "Fresh fruits and berries"
+  },
+  {
+    "name": "vegetables",
+    "imageURL": "https://alpinecardiology.com/wp-content/uploads/AC-Fruits-and-Vegetables.jpg",
+    "description": "Organic vegetables"
+  },
+  {
+    "name": "meat",
+    "imageURL": "https://www.meatemporium.com.au/cdn/shop/products/JA_AME_FeedTheFamily_41.jpg?v=1652748939",
+    "description": "Fresh meat products"
+  },
+  {
+    "name": "dairy",
+    "imageURL": "https://images.squarespace-cdn.com/content/v1/638d8044b6fc77648ebcedba/1736315963026-U88IRCGKBWXBUPHXGQCD/5+Tips+for+Buying+Health+Dairy+Products-f.jpg",
+    "description": "Milk, cheese, and dairy products"
+  },
+  {
+    "name": "beverages",
+    "imageURL": "https://thumbs.dreamstime.com/b/products-popular-global-soft-drink-brands-poznan-pol-oct-344374883.jpg",
+    "description": "Drinks and beverages"
+  },
+  {
+    "name": "snacks",
+    "imageURL": "https://www.mcs.eu/Blog/2021-11/image-thumb__5396__ogImage/Salzige%20Snacks%20MCS.png",
+    "description": "Snacks and quick bites"
+  }
+]
