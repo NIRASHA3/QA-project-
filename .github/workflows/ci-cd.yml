@@ -29,8 +29,9 @@ jobs:
       run: CI=false npm run build
       working-directory: ./client
         
-    - name: Run React tests
-      run: echo "Skipping React tests for now"
+    - name: Run React unit tests
+      run: npm test -- --watchAll=false --passWithNoTests
+      working-directory: ./client
 
   backend-build:
     name: Build Node.js Backend
@@ -50,15 +51,41 @@ jobs:
       run: npm install
       working-directory: ./backend
         
-    - name: Run backend tests
-      run: echo "Skipping backend tests for now"
+    - name: Run backend unit tests
+      run: npm test --watchAll=false --passWithNoTests
+      working-directory: ./backend
+
+  automation-tests:
+    name: Run Automation Tests
+    runs-on: ubuntu-latest
+    needs: [client-build, backend-build]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install root dependencies
+      run: npm install
+      
+    - name: Run login automation test
+      run: npm run test:login --if-present
+      
+    - name: Run add-to-cart automation test
+      run: npm run test:add-to-cart --if-present
 
   success:
     name: Pipeline Success
     runs-on: ubuntu-latest
-    needs: [client-build, backend-build]
+    needs: [client-build, backend-build, automation-tests]
     
     steps:
     - name: Success Message
       run: |
         echo "AURAPOS CI/CD PIPELINE COMPLETED SUCCESSFULLY!"
+        echo "All builds and tests passed!"
