@@ -20,31 +20,22 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
-        cache: 'npm'
-        cache-dependency-path: client/package-lock.json
         
     - name: Install and Build React App
       run: |
         cd client
-        npm ci
+        npm install  # Changed from npm ci to npm install
         CI=false npm run build
         
     - name: Run React Unit Tests
       run: |
         cd client
-        npm test -- --watchAll=false --coverage  --passWithNoTests
+        npm test -- --watchAll=false --coverage --passWithNoTests
       
-    - name: Setup Backend Environment
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        cache-dependency-path: backend/package-lock.json
-        
     - name: Install Backend Dependencies
       run: |
         cd backend
-        npm ci
+        npm install  # Changed from npm ci to npm install
         
     - name: Run Backend Unit Tests
       run: |
@@ -69,7 +60,7 @@ jobs:
     - name: Install Backend Dependencies
       run: |
         cd backend
-        npm ci
+        npm install  # Changed from npm ci to npm install
         
     - name: Start Backend Server and Run BDD Tests
       run: |
@@ -103,15 +94,15 @@ jobs:
     - name: Install Backend Dependencies
       run: |
         cd backend
-        npm ci
+        npm install  # Changed from npm ci to npm install
         
     - name: Install Frontend Dependencies
       run: |
         cd client
-        npm ci
+        npm install  # Changed from npm ci to npm install
         
     - name: Install Test Dependencies
-      run: npm ci
+      run: npm install  # Changed from npm ci to npm install
         
     - name: Setup Chrome for Selenium
       run: |
@@ -134,7 +125,7 @@ jobs:
         echo "Frontend PID: $FRONTEND_PID"
         
         # Wait for servers to be ready
-        sleep 20
+        sleep 25  # Increased from 20 to 25 seconds
         
         # Verify servers are running
         curl -f http://localhost:5000 || exit 1
@@ -146,6 +137,7 @@ jobs:
         node tests/ui/login-working-test.js
         
         # Run add-to-cart test
+        sleep 5  # Added delay between tests
         node tests/ui/add-to-cart-working.js
         
     - name: Cleanup Servers
