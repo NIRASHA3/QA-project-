@@ -68,6 +68,7 @@ jobs:
     - name: Start React app for automation tests
       run: |
         cd client
+        CI=false npm run build
         npm start &
         echo "React app starting..."
         sleep 20
@@ -95,23 +96,26 @@ jobs:
     - name: Automation - Install Dependencies
       run: npm ci
       
+         
     - name: Automation - Login Test
       run: node tests/ui/login-working-test.js
-      continue-on-error: true
       env:
         NODE_ENV: test
         TEST_BASE_URL: http://localhost:3000
         API_BASE_URL: http://localhost:5000
+        TEST_USERID: "test1" 
+        TEST_PASSWORD: "12345"
 
     - name: Automation - Add to Cart Test
       run: |
-        sleep 5
+        sleep 10  # Increased delay between tests
         node tests/ui/add-to-cart-working.js
-      continue-on-error: true
       env:
         NODE_ENV: test
         TEST_BASE_URL: http://localhost:3000
         API_BASE_URL: http://localhost:5000
+        TEST_USERID: test1"
+        TEST_PASSWORD: "12345"
 
     - name: Cleanup All Servers
       run: |
