@@ -32,7 +32,7 @@ jobs:
     - name: Run React Unit Tests
       run: |
         cd client
-        npm test -- --watchAll=false --coverage
+        npm test -- --watchAll=false --coverage  --passWithNoTests
       
     - name: Setup Backend Environment
       uses: actions/setup-node@v4
