@@ -50,7 +50,7 @@ jobs:
         NODE_ENV: test
         
     - name: Run browser test
-      run:
+      run: |
         mkdir -p /tmp/chrome-profile
         node tests/ui/browser-test.js
       continue-on-error: true
