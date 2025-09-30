@@ -1,0 +1,71 @@
+name: AURAPOS Automation Tests
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  automation-tests:
+    name: Automation UI Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        
+    - name: Install dependencies
+      run: |
+        cd client && npm install
+        cd ../backend && npm install
+        cd .. && npm ci
+        
+    - name: Start Backend Server
+      run: |
+        cd backend
+        npm start &
+        echo "Backend server starting (no validation)..."
+        sleep 20
+      working-directory: ./
+        
+    - name: Start Frontend
+      run: |
+        cd client
+        npm start &
+        echo "Frontend starting..."
+        sleep 40
+      working-directory: ./
+        
+    - name: Setup Chrome for Automation
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        
+    - name: Run Automation Tests
+      run: |
+        google-chrome --version
+        node tests/ui/login-working-test.js
+      env:
+        NODE_ENV: test
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        pkill -f node || true
+        echo "Cleanup completed"
+        
+    - name: Success Report
+      if: always()
+      run: |
+        echo "=================================================================="
+        echo "AURAPOS AUTOMATION TESTS COMPLETED"
+        echo "=================================================================="
+        echo "AUTOMATION TESTS: Selenium UI Testing"
+        echo "Login Test"
+        echo "=================================================================="
+        echo "STATUS: AUTOMATION TESTS EXECUTED"
+        echo "=================================================================="

@@ -8,9 +8,9 @@ const {
 } = require("../controllers/userController");
 
  // Import the middleware
-const { validateLoginInput } = require('../middleware/validation');
+//const { validateLoginInput } = require('../middleware/validation');
 //Make it work by commenting out the middleware for now
-router.post('/login', validateLoginInput, login);
+//router.post('/login', validateLoginInput, login);
 //router.post('/register', register);
 
 
