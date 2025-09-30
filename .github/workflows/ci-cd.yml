@@ -53,18 +53,19 @@ jobs:
     - name: Start Frontend for Automation  
       run: |
         cd client
-        npm start &
+        # Set the API URL explicitly
+        REACT_APP_API_URL=http://localhost:5000 npm start &
         echo "Frontend server starting for automation tests..."
-        sleep 30
+        sleep 35
       working-directory: ./
+      env:
+        REACT_APP_API_URL: http://localhost:5000
         
-    - name: Verify Servers Running
+    - name: Verify Backend API
       run: |
-        echo "Checking servers before automation tests:"
-        echo "Backend process:" && ps aux | grep "node.*backend" | grep -v grep || echo "No backend process"
-        echo "Frontend process:" && ps aux | grep "node.*client" | grep -v grep || echo "No frontend process"
-        echo "Port 5000 (backend):" && (netstat -tuln | grep :5000 || echo "Not found")
-        echo "Port 3000 (frontend):" && (netstat -tuln | grep :3000 || echo "Not found")
+        echo "Testing backend API directly..."
+        curl -f http://localhost:5000/api/users || curl -f http://localhost:5000/ || echo "Checking backend endpoints..."
+        echo "Backend should be ready for login requests"
         
     - name: Run Automation Tests
       run: |
@@ -74,6 +75,8 @@ jobs:
         node tests/ui/add-to-cart-working.js
       env:
         NODE_ENV: test
+        TEST_BASE_URL: http://localhost:3000
+        API_BASE_URL: http://localhost:5000
         
     - name: Cleanup
       if: always()
