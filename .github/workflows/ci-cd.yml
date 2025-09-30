@@ -3,10 +3,13 @@ name: AURAPOS CI/CD Pipeline
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  # JOB 1: Build and Unit Tests
+  build-and-unit-tests:
+    name: Build and Unit Tests
     runs-on: ubuntu-latest
     
     steps:
@@ -17,80 +20,157 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: client/package-lock.json
         
-    - name: Build React app
+    - name: Install and Build React App
       run: |
         cd client
-        npm install
-        CI=false npm run build
+        npm ci
+        npm run build
         
-    - name: Install backend dependencies
+    - name: Run React Unit Tests
+      run: |
+        cd client
+        npm test -- --watchAll=false --coverage
+      
+    - name: Setup Backend Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: Install Backend Dependencies
       run: |
         cd backend
-        npm install
+        npm ci
         
-    # TDD UNIT TESTS
-    - name: TDD - Login Validation Tests
-      run: npm test tests/integration/auth.test.js
-      working-directory: ./backend
-      continue-on-error: true
-   
-      
-    # BDD TESTS
-    - name: Start backend server for BDD tests
+    - name: Run Backend Unit Tests
       run: |
-        npm start &
-        sleep 10  # Wait for server to start
-      working-directory: ./backend
-      continue-on-error: true
+        cd backend
+        npm test -- --coverage --passWithNoTests
 
-    - name: BDD - Behavior Tests
-      run: npm run test:bdd
-      working-directory: ./backend
-      continue-on-error: true
-
-
+  # JOB 2: Integration and BDD Tests
+  integration-tests:
+    name: Integration and BDD Tests
+    runs-on: ubuntu-latest
+    needs: build-and-unit-tests
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
         
-    # AUTOMATION TESTS 
-    - name: Start React app for automation tests
+    - name: Install Backend Dependencies
+      run: |
+        cd backend
+        npm ci
+        
+    - name: Start Backend Server and Run BDD Tests
+      run: |
+        cd backend
+        # Start server and run tests in one command to ensure server is running
+        npm start &
+        SERVER_PID=$!
+        sleep 15
+        
+        # Run BDD tests
+        npm run test:bdd
+        
+        # Stop server after tests
+        kill $SERVER_PID
+
+  # JOB 3: E2E Automation Tests
+  e2e-tests:
+    name: End-to-End Automation Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        
+    - name: Install Backend Dependencies
+      run: |
+        cd backend
+        npm ci
+        
+    - name: Install Frontend Dependencies
       run: |
         cd client
-        npm start &
-        sleep 25
-      continue-on-error: true  
-  
-    - name: Automation - Setup Chrome
+        npm ci
+        
+    - name: Install Test Dependencies
+      run: npm ci
+        
+    - name: Setup Chrome for Selenium
       run: |
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
         
-    - name: Automation - Install Dependencies
-      run: npm ci
-      
-    - name: Automation - Login Test
-      run: node tests/ui/login-working-test.js
-      continue-on-error: true
-      env:
-        NODE_ENV: test
-        
-    - name: Automation - Add to Cart Test
+    - name: Start Full Stack Application
       run: |
-        sleep 10
+        # Start backend
+        cd backend
+        npm start &
+        BACKEND_PID=$!
+        
+        # Start frontend
+        cd ../client
+        npm start &
+        FRONTEND_PID=$!
+        
+        echo "Backend PID: $BACKEND_PID"
+        echo "Frontend PID: $FRONTEND_PID"
+        
+        # Wait for servers to be ready
+        sleep 20
+        
+        # Verify servers are running
+        curl -f http://localhost:5000 || exit 1
+        curl -f http://localhost:3000 || exit 1
+        
+    - name: Run E2E Automation Tests
+      run: |
+        # Run login test
+        node tests/ui/login-working-test.js
+        
+        # Run add-to-cart test
         node tests/ui/add-to-cart-working.js
-      continue-on-error: true
-      env:
-        NODE_ENV: test
-        CI_MODE: "true"
         
-    - name: Success Report
+    - name: Cleanup Servers
+      run: |
+        pkill -f "node.*start" || true
+        sleep 5
+
+  # JOB 4: Success Notification (Only runs if all previous jobs pass)
+  success:
+    name: Pipeline Success
+    runs-on: ubuntu-latest
+    needs: [build-and-unit-tests, integration-tests, e2e-tests]
+    if: success()
+    
+    steps:
+    - name: Generate Test Report
       run: |
         echo "=================================================================="
-        echo "AURAPOS CI/CD PIPELINE - COMPLETE TEST EXECUTION"
+        echo "AURAPOS CI/CD PIPELINE - QUALITY GATES PASSED"
         echo "=================================================================="
-        echo "BUILD: React Frontend + Node.js Backend"
-        echo "TDD TESTS: Login Validation + Cart Calculation"
-        echo "BDD TESTS: Behavior Driven Development"
-        echo "AUTOMATION TESTS: Selenium UI Testing"
+        echo "BUILD STATUS: SUCCESS"
+        echo "UNIT TESTS: TDD ALL PASSED"
+        echo "INTEGRATION TESTS: BDD ALL PASSED" 
+        echo "AUTOMATION TESTS: Selenium UI Testing ALL PASSED"
+        echo "ALL TESTS EXECUTED SUCCESSFULLY"
         echo "=================================================================="
-        echo "STATUS: ALL TESTS EXECUTED SUCCESSFULLY"
+        echo "DEPLOYMENT APPROVED: Ready for production"
         echo "=================================================================="
