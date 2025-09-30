@@ -11,7 +11,9 @@ async function createDriver() {
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--window-size=1920,1080',
-        '--user-data-dir=/tmp/chrome-${Date.now()}'
+        '--headless',
+        '--remote-debugging-port=0', // Let Chrome choose a free port
+        '--user-data-dir=/tmp/chrome-profile-' + Date.now() 
     );
     
     const driver = await new Builder()

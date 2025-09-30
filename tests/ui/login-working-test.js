@@ -22,7 +22,9 @@ async function createDriver() {
         '--disable-renderer-backgrounding',
         '--no-first-run',
         '--no-default-browser-check',
-        '--user-data-dir=/tmp/chrome-${Date.now()}'
+        '--headless',
+        '--remote-debugging-port=0', // Let Chrome choose a free port
+        '--user-data-dir=/tmp/chrome-profile-' + Date.now() 
     );
     
     // Set explicit Chrome path for Windows
