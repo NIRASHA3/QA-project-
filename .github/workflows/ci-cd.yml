@@ -54,6 +54,7 @@ jobs:
       continue-on-error: true
       env:
         NODE_ENV: test
+        CHROME_USER_DATA_DIR: /tmp/chrome-profile
         
     - name: Success
       run: |
