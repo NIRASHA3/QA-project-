@@ -1,4 +1,4 @@
-//const { calculateCartTotal, calculateItemTotal, calculateTax, calculateGrandTotal } = require('../utils/cartUtils');
+const { calculateCartTotal, calculateItemTotal, calculateTax, calculateGrandTotal } = require('../utils/cartUtils');
 
 describe('Cart Calculations', () => {
   // Test for individual item total
