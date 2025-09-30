@@ -56,7 +56,7 @@ jobs:
       run: |
         cd client
         npm start &
-        sleep 15
+        sleep 25
       continue-on-error: true  
   
     - name: Automation - Setup Chrome
@@ -74,10 +74,13 @@ jobs:
         NODE_ENV: test
         
     - name: Automation - Add to Cart Test
-      run: node tests/ui/add-to-cart-working.js
+      run: |
+        sleep 10
+        node tests/ui/add-to-cart-working.js
       continue-on-error: true
       env:
         NODE_ENV: test
+        CI_MODE: "true"
         
     - name: Success Report
       run: |
