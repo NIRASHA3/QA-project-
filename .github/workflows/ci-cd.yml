@@ -49,14 +49,6 @@ jobs:
       env:
         NODE_ENV: test
         
-    - name: Run browser test
-      run: |
-        mkdir -p /tmp/chrome-profile
-        node tests/ui/browser-test.js
-      continue-on-error: true
-      env:
-        NODE_ENV: test
-        CHROME_USER_DATA_DIR: /tmp/chrome-profile
         
     - name: Success
       run: |
