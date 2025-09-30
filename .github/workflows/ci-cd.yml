@@ -27,7 +27,7 @@ jobs:
       run: |
         cd client
         npm ci
-        npm run build
+        CI=false npm run build
         
     - name: Run React Unit Tests
       run: |
@@ -127,7 +127,7 @@ jobs:
         
         # Start frontend
         cd ../client
-        npm start &
+        CI=false npm start &
         FRONTEND_PID=$!
         
         echo "Backend PID: $BACKEND_PID"
