@@ -1,131 +1,86 @@
-name: AURAPOS CI/CD Pipeline
+name: AURAPOS CI/CD
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  test:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '20'
         
-    - name: Build React app
+    - name: Install dependencies
       run: |
-        cd client
-        npm install
-        CI=false npm run build
+        cd client && npm install
+        cd ../backend && npm install
+        cd .. && npm ci
         
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        npm install
-        
-    # TDD UNIT TESTS
-    - name: TDD - Login Validation Tests
+    - name: Run TDD Tests
       run: npm test tests/integration/auth.test.js
       working-directory: ./backend
-   
-    # BDD TESTS
-    - name: Start backend server for BDD tests
+        
+    - name: Run BDD Tests  
       run: |
         npm start &
-        SERVER_PID=$!
-        echo "BDD Server PID: $SERVER_PID"
-        sleep 10
+        sleep 15
+        npm run test:bdd
       working-directory: ./backend
-
-    - name: BDD - Behavior Tests
-      run: npm run test:bdd
-      working-directory: ./backend
-
+        
     - name: Stop BDD Server
       run: |
-        echo "Stopping BDD server..."
-        pkill -f "node.*server.js" || true
-        pkill -f "node.*start" || true
+        echo "Stopping BDD backend server..."
+        pkill -f "node.*backend" || true
+        pkill -f "node.*server" || true
         sleep 3
         echo "BDD server stopped"
-      continue-on-error: true
-
-    # AUTOMATION TESTS - FIXED FOR ROOT LEVEL
-    - name: Start backend server for automation tests
+      working-directory: ./
+        
+    - name: Start Backend for Automation
       run: |
         cd backend
         npm start &
-        echo "Automation Backend server starting..."
-        sleep 10
-      continue-on-error: true
-  
-    - name: Start React app for automation tests
+        echo "Backend server starting for automation tests..."
+        sleep 15
+      working-directory: ./
+        
+    - name: Start Frontend for Automation  
       run: |
         cd client
-        CI=false npm run build
         npm start &
-        echo "React app starting..."
-        sleep 20
-      continue-on-error: true
-  
-    - name: Wait for servers to be ready
+        echo "Frontend server starting for automation tests..."
+        sleep 30
+      working-directory: ./
+        
+    - name: Verify Servers Running
       run: |
-        echo "Waiting for servers to start..."
-        # Wait for backend (port 5000)
-        timeout 30s bash -c 'until curl -f http://localhost:5000 >/dev/null 2>&1; do sleep 2; echo "Waiting for backend..."; done'
-        echo "Backend server is ready!"
+        echo "Checking servers before automation tests:"
+        echo "Backend process:" && ps aux | grep "node.*backend" | grep -v grep || echo "No backend process"
+        echo "Frontend process:" && ps aux | grep "node.*client" | grep -v grep || echo "No frontend process"
+        echo "Port 5000 (backend):" && (netstat -tuln | grep :5000 || echo "Not found")
+        echo "Port 3000 (frontend):" && (netstat -tuln | grep :3000 || echo "Not found")
         
-        # Wait for frontend (port 3000)  
-        timeout 30s bash -c 'until curl -f http://localhost:3000 >/dev/null 2>&1; do sleep 2; echo "Waiting for frontend..."; done'
-        echo "React app is ready!"
-        
+    - name: Run Automation Tests
+      run: |
+        google-chrome --version
+        node tests/ui/login-working-test.js
         sleep 5
-      continue-on-error: true
-  
-    - name: Automation - Setup Chrome
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-        
-    - name: Automation - Install Dependencies
-      run: npm ci
-      
-         
-    - name: Automation - Login Test
-      run: node tests/ui/login-working-test.js
-      env:
-        NODE_ENV: test
-        TEST_BASE_URL: http://localhost:3000
-        API_BASE_URL: http://localhost:5000
-        TEST_USERID: "test1" 
-        TEST_PASSWORD: "12345"
-
-    - name: Automation - Add to Cart Test
-      run: |
-        sleep 10  # Increased delay between tests
         node tests/ui/add-to-cart-working.js
       env:
         NODE_ENV: test
-        TEST_BASE_URL: http://localhost:3000
-        API_BASE_URL: http://localhost:5000
-        TEST_USERID: test1"
-        TEST_PASSWORD: "12345"
-
-    - name: Cleanup All Servers
+        
+    - name: Cleanup
+      if: always()
       run: |
-        echo "Cleaning up all servers..."
-        pkill -f "node.*server.js" || true
-        pkill -f "node.*start" || true
-        pkill -f "react-scripts" || true
-        sleep 3
-        echo "All servers cleaned up"
-      continue-on-error: true
+        echo "Final cleanup..."
+        pkill -f node || true
+        echo "Cleanup completed"
         
     - name: Success Report
       run: |
