@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd backend && npm run dev",
-    "client": "cd frontend && npm start",
+    "client": "cd client && npm start",
     "test:browser": "node tests/ui/browser-test.js",
     "test:login": "node tests/ui/login-working-test.js",
     "test:add-to-cart": "node tests/ui/add-to-cart-working.js",
