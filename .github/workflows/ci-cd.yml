@@ -48,8 +48,17 @@ jobs:
       run: npm run test:bdd
       working-directory: ./backend
       continue-on-error: true
+
+
         
-    # AUTOMATION TESTS  
+    # AUTOMATION TESTS 
+    - name: Start React app for automation tests
+      run: |
+        cd client
+        npm start &
+        sleep 15
+      continue-on-error: true  
+  
     - name: Automation - Setup Chrome
       run: |
         sudo apt-get update
