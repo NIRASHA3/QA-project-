@@ -37,6 +37,13 @@ jobs:
    
       
     # BDD TESTS
+    - name: Start backend server for BDD tests
+      run: |
+        npm start &
+        sleep 10  # Wait for server to start
+      working-directory: ./backend
+      continue-on-error: true
+
     - name: BDD - Behavior Tests
       run: npm run test:bdd
       working-directory: ./backend
