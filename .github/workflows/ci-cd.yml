@@ -33,7 +33,6 @@ jobs:
     - name: TDD - Login Validation Tests
       run: npm test tests/integration/auth.test.js
       working-directory: ./backend
-      continue-on-error: true
    
     # BDD TESTS
     - name: Start backend server for BDD tests
@@ -43,12 +42,10 @@ jobs:
         echo "BDD Server PID: $SERVER_PID"
         sleep 10
       working-directory: ./backend
-      continue-on-error: true
 
     - name: BDD - Behavior Tests
       run: npm run test:bdd
       working-directory: ./backend
-      continue-on-error: true
 
     - name: Stop BDD Server
       run: |
@@ -59,7 +56,7 @@ jobs:
         echo "BDD server stopped"
       continue-on-error: true
 
-    # AUTOMATION TESTS - FIXED
+    # AUTOMATION TESTS - FIXED FOR ROOT LEVEL
     - name: Start backend server for automation tests
       run: |
         cd backend
@@ -103,7 +100,9 @@ jobs:
       continue-on-error: true
       env:
         NODE_ENV: test
-        
+        TEST_BASE_URL: http://localhost:3000
+        API_BASE_URL: http://localhost:5000
+
     - name: Automation - Add to Cart Test
       run: |
         sleep 5
@@ -111,6 +110,8 @@ jobs:
       continue-on-error: true
       env:
         NODE_ENV: test
+        TEST_BASE_URL: http://localhost:3000
+        API_BASE_URL: http://localhost:5000
 
     - name: Cleanup All Servers
       run: |
