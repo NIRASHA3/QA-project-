@@ -21,7 +21,8 @@ async function createDriver() {
         '--disable-backgrounding-occluded-windows',
         '--disable-renderer-backgrounding',
         '--no-first-run',
-        '--no-default-browser-check'
+        '--no-default-browser-check',
+        '--user-data-dir=/tmp/chrome-${Date.now()}'
     );
     
     // Set explicit Chrome path for Windows

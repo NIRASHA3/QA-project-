@@ -10,7 +10,8 @@ async function createDriver() {
         '--no-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--window-size=1920,1080'
+        '--window-size=1920,1080',
+        '--user-data-dir=/tmp/chrome-${Date.now()}'
     );
     
     const driver = await new Builder()
