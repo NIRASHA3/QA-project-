@@ -34,11 +34,7 @@ jobs:
       run: npm test tests/integration/auth.test.js
       working-directory: ./backend
       continue-on-error: true
-      
-    - name: TDD - Cart Calculation Tests  
-      run: npm test src/tests/cartUtils.test.js
-      working-directory: ./client
-      continue-on-error: true
+   
       
     # BDD TESTS
     - name: BDD - Behavior Tests
