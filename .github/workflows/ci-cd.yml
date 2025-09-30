@@ -47,25 +47,36 @@ jobs:
         cd backend
         npm start &
         echo "Backend server starting for automation tests..."
-        sleep 15
+        sleep 20
+      working-directory: ./
+        
+    - name: Debug Backend Endpoints
+      run: |
+        echo "=== BACKEND ENDPOINT DISCOVERY ==="
+        echo "Waiting for backend to be fully ready..."
+        sleep 10
+        echo "Available endpoints:"
+        curl -s http://localhost:5000/ | head -5 || echo "Root endpoint not accessible"
+        echo ""
+        echo "Testing common auth endpoints:"
+        for endpoint in "/api/login" "/api/auth" "/login" "/auth" "/api/users/login" "/users/login" "/api/user/login"; do
+          if curl -f -s http://localhost:5000$endpoint >/dev/null 2>&1; then
+            echo "✓ FOUND: $endpoint"
+          else
+            echo "✗ NOT FOUND: $endpoint"
+          fi
+        done
       working-directory: ./
         
     - name: Start Frontend for Automation  
       run: |
         cd client
-        # Set the API URL explicitly
         REACT_APP_API_URL=http://localhost:5000 npm start &
         echo "Frontend server starting for automation tests..."
-        sleep 35
+        sleep 40
       working-directory: ./
       env:
         REACT_APP_API_URL: http://localhost:5000
-        
-    - name: Verify Backend API
-      run: |
-        echo "Testing backend API directly..."
-        curl -f http://localhost:5000/api/users || curl -f http://localhost:5000/ || echo "Checking backend endpoints..."
-        echo "Backend should be ready for login requests"
         
     - name: Run Automation Tests
       run: |
@@ -75,15 +86,10 @@ jobs:
         node tests/ui/add-to-cart-working.js
       env:
         NODE_ENV: test
-        TEST_BASE_URL: http://localhost:3000
-        API_BASE_URL: http://localhost:5000
         
     - name: Cleanup
       if: always()
-      run: |
-        echo "Final cleanup..."
-        pkill -f node || true
-        echo "Cleanup completed"
+      run: pkill -f node || true
         
     - name: Success Report
       run: |
