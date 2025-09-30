@@ -39,6 +39,8 @@ jobs:
     - name: Start backend server for BDD tests
       run: |
         npm start &
+        SERVER_PID=$!
+        echo "BDD Server PID: $SERVER_PID"
         sleep 10
       working-directory: ./backend
       continue-on-error: true
@@ -48,12 +50,21 @@ jobs:
       working-directory: ./backend
       continue-on-error: true
 
+    - name: Stop BDD Server
+      run: |
+        echo "Stopping BDD server..."
+        pkill -f "node.*server.js" || true
+        pkill -f "node.*start" || true
+        sleep 3
+        echo "BDD server stopped"
+      continue-on-error: true
+
     # AUTOMATION TESTS - FIXED
     - name: Start backend server for automation tests
       run: |
         cd backend
         npm start &
-        echo "Backend server starting..."
+        echo "Automation Backend server starting..."
         sleep 10
       continue-on-error: true
   
@@ -68,9 +79,11 @@ jobs:
     - name: Wait for servers to be ready
       run: |
         echo "Waiting for servers to start..."
+        # Wait for backend (port 5000)
         timeout 30s bash -c 'until curl -f http://localhost:5000 >/dev/null 2>&1; do sleep 2; echo "Waiting for backend..."; done'
         echo "Backend server is ready!"
         
+        # Wait for frontend (port 3000)  
         timeout 30s bash -c 'until curl -f http://localhost:3000 >/dev/null 2>&1; do sleep 2; echo "Waiting for frontend..."; done'
         echo "React app is ready!"
         
@@ -98,6 +111,16 @@ jobs:
       continue-on-error: true
       env:
         NODE_ENV: test
+
+    - name: Cleanup All Servers
+      run: |
+        echo "Cleaning up all servers..."
+        pkill -f "node.*server.js" || true
+        pkill -f "node.*start" || true
+        pkill -f "react-scripts" || true
+        sleep 3
+        echo "All servers cleaned up"
+      continue-on-error: true
         
     - name: Success Report
       run: |
