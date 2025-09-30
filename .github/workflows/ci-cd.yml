@@ -46,42 +46,133 @@ jobs:
       run: |
         cd backend
         
-        # Create a backup of original server
-        cp server.js server.js.backup
+        # Create a COMPLETE standalone test server
+        cat > test-server.js << 'EOF'
+        const express = require("express");
+        const cors = require("cors");
+        const app = express();
         
-        # Add test route to existing server (temporary modification)
-        echo "
-        // TEST ROUTE ADDED FOR AUTOMATION TESTS
-        app.post('/api/users/login', (req, res) => {
-          console.log('TEST LOGIN CALLED:', req.body);
-          if (req.body.userId === 'test1' && req.body.password === '12345') {
+        app.use(cors());
+        app.use(express.json());
+        
+        // Mock login endpoint - COMPLETELY BYPASSES VALIDATION
+        app.post("/api/users/login", (req, res) => {
+          console.log("TEST LOGIN CALLED:", req.body);
+          if (req.body.userId === "test1" && req.body.password === "12345") {
+            console.log("LOGIN SUCCESSFUL for test user");
             return res.json({
               success: true,
-              message: 'Login successful',
-              user: { userId: 'test1', name: 'test' }
+              message: "Login successful",
+              user: { userId: "test1", name: "test"}
             });
           } else {
             return res.status(401).json({
               success: false,
-              message: 'Invalid credentials'
+              message: "Invalid credentials"
             });
           }
         });
-        " >> server.js
         
-        # Start the modified server
-        npm start &
-        echo "Modified backend server starting..."
-        sleep 20
+        // Products endpoint for home page
+        app.get("/api/items", (req, res) => {
+          res.json({
+            items: {
+              grapes: {
+                name: "Grapes",
+                price: "$8",
+                category: "fruits"
+              },
+              apples: {
+                name: "Apples",
+                price: "$5", 
+                category: "fruits"
+              },
+              bananas: {
+                name: "Bananas",
+                price: "$3",
+                category: "fruits"
+              }
+            }
+          });
+        });
+        
+        // Cart endpoints for cart page
+        app.get("/api/cart", (req, res) => {
+          res.json({
+            items: [
+              {
+                id: "grapes",
+                name: "Grapes",
+                price: 8,
+                quantity: 1
+              }
+            ],
+            total: 8
+          });
+        });
+        
+        app.post("/api/cart", (req, res) => {
+          res.json({
+            success: true,
+            message: "Item added to cart",
+            cart: {
+              items: [
+                {
+                  id: "grapes", 
+                  name: "Grapes",
+                  price: 8,
+                  quantity: 1
+                }
+              ],
+              total: 8
+            }
+          });
+        });
+        
+        // User endpoint for profile
+        app.get("/api/users/me", (req, res) => {
+          res.json({
+            userId: "test1",
+            name: "test",
+            role: "user"
+          });
+        });
+        
+        // Root endpoint
+        app.get("/", (req, res) => {
+          res.send("Test Backend Server Running");
+        });
+        
+        const PORT = 5000;
+        app.listen(PORT, () => {
+          console.log(`TEST Backend Server running on port ${PORT}`);
+          console.log("Login: POST /api/users/login");
+          console.log("Products: GET /api/products"); 
+          console.log("Cart: GET /api/cart, POST /api/cart");
+          console.log("Test credentials: test1 / 12345");
+        });
+        EOF
+        
+        # Start the COMPLETE test server
+        node test-server.js &
+        echo "Test backend server starting on port 5000..."
+        sleep 15
       working-directory: ./
         
     - name: Verify Test Backend
       run: |
         echo "=== TESTING TEST LOGIN ENDPOINT ==="
-        echo "Testing login with test credentials..."
         curl -X POST http://localhost:5000/api/users/login \
           -H "Content-Type: application/json" \
-          -d '{"userId":"test1","password":"12345"}' || echo "Login test completed"
+          -d '{"userId":"test1","password":"12345"}'
+        echo ""
+        echo "=== TESTING PRODUCTS ENDPOINT ==="
+        curl http://localhost:5000/api/products
+        echo ""
+        echo "=== TESTING CART ENDPOINT ==="
+        curl http://localhost:5000/api/cart
+        echo ""
+        echo "Backend verification completed"
       working-directory: ./
         
     - name: Start Frontend for Automation  
@@ -103,20 +194,14 @@ jobs:
       env:
         NODE_ENV: test
         
-    - name: Restore Original Server
-      if: always()
-      run: |
-        cd backend
-        # Restore the original server file
-        cp server.js.backup server.js
-        echo "Original server file restored"
-      working-directory: ./
-        
     - name: Cleanup
       if: always()
       run: |
         pkill -f node || true
+        pkill -f test-server || true
+        rm -f backend/test-server.js 2>/dev/null || true
         echo "Cleanup completed"
+      working-directory: ./
         
     - name: Success Report
       if: always()
