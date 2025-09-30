@@ -3,12 +3,12 @@ const UserModel = require("../models/userModel");
 // Login - authenticates user credentials
 const login = async (req, res) => {
   try {
-    /*
+    
      //GREEN TEST
     //NEW VALIDATION: Check password length first
     if (!req.body.password || req.body.password.length < 8) {
       return res.status(400).json({ message: "Password must be at least 8 characters long" });
-    }*/
+    }
 
     // Find user with matching userId, password, and verified status
     const user = await UserModel.findOne({

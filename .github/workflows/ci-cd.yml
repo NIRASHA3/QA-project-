@@ -52,7 +52,7 @@ jobs:
         # Add test route to existing server (temporary modification)
         echo "
         // TEST ROUTE ADDED FOR AUTOMATION TESTS
-        app.post('/api/users/login', (req, res) => {
+        app.post('/api/test-login', (req, res) => {
           console.log('TEST LOGIN CALLED:', req.body);
           if (req.body.userId === 'test1' && req.body.password === '12345') {
             return res.json({
@@ -72,16 +72,33 @@ jobs:
         # Start the modified server
         npm start &
         echo "Modified backend server starting..."
+        sleep 15
+      working-directory: ./
+        
+    - name: Start Backend for Automation
+      run: |
+        cd backend
+        npm start &
+        echo "Backend server starting for automation tests..."
         sleep 20
       working-directory: ./
         
-    - name: Verify Test Backend
+    - name: Debug Backend Endpoints
       run: |
-        echo "=== TESTING TEST LOGIN ENDPOINT ==="
-        echo "Testing login with test credentials..."
-        curl -X POST http://localhost:5000/api/users/login \
-          -H "Content-Type: application/json" \
-          -d '{"userId":"test1","password":"12345"}' || echo "Login test completed"
+        echo "=== BACKEND ENDPOINT DISCOVERY ==="
+        echo "Waiting for backend to be fully ready..."
+        sleep 10
+        echo "Available endpoints:"
+        curl -s http://localhost:5000/ | head -5 || echo "Root endpoint not accessible"
+        echo ""
+        echo "Testing common auth endpoints:"
+        for endpoint in "/api/login" "/api/auth" "/login" "/auth" "/api/users/login" "/users/login" "/api/user/login"; do
+          if curl -f -s http://localhost:5000$endpoint >/dev/null 2>&1; then
+            echo "✓ FOUND: $endpoint"
+          else
+            echo "✗ NOT FOUND: $endpoint"
+          fi
+        done
       working-directory: ./
         
     - name: Start Frontend for Automation  
@@ -103,23 +120,11 @@ jobs:
       env:
         NODE_ENV: test
         
-    - name: Restore Original Server
-      if: always()
-      run: |
-        cd backend
-        # Restore the original server file
-        cp server.js.backup server.js
-        echo "Original server file restored"
-      working-directory: ./
-        
     - name: Cleanup
       if: always()
-      run: |
-        pkill -f node || true
-        echo "Cleanup completed"
+      run: pkill -f node || true
         
     - name: Success Report
-      if: always()
       run: |
         echo "=================================================================="
         echo "AURAPOS CI/CD PIPELINE - COMPLETE TEST EXECUTION"
@@ -129,5 +134,5 @@ jobs:
         echo "BDD TESTS: Behavior Driven Development"
         echo "AUTOMATION TESTS: Selenium UI Testing with Full Stack"
         echo "=================================================================="
-        echo "STATUS: ALL TESTS EXECUTED"
+        echo "STATUS: ALL TESTS EXECUTED SUCCESSFULLY"
         echo "=================================================================="
