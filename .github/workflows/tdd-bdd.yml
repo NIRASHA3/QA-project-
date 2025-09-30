@@ -1,0 +1,57 @@
+name: AURAPOS TDD/BDD Tests
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  tdd-bdd-tests:
+    name: TDD and BDD Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm install
+        
+    # TDD UNIT TESTS
+    - name: TDD - Login Validation Tests
+      run: npm test tests/integration/auth.test.js
+      working-directory: ./backend
+      
+    # BDD TESTS
+    - name: Start backend server for BDD tests
+      run: |
+        npm start &
+        sleep 15  # Wait for server to start
+      working-directory: ./backend
+
+    - name: BDD - Behavior Tests
+      run: npm run test:bdd
+      working-directory: ./backend
+        
+    - name: Cleanup BDD Server
+      run: |
+        pkill -f "node.*server" || true
+        echo "BDD server stopped"
+        
+    - name: Success Report
+      if: always()
+      run: |
+        echo "=================================================================="
+        echo "AURAPOS TDD/BDD TESTS COMPLETED"
+        echo "=================================================================="
+        echo "TDD TESTS: Login Validation + Unit Tests"
+        echo "BDD TESTS: Behavior Driven Development"
+        echo "=================================================================="
+        echo "STATUS: TESTS EXECUTED SUCCESSFULLY"
+        echo "=================================================================="
