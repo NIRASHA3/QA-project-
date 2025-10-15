@@ -1,6 +1,4 @@
 const CategoryModel = require("../models/categoriesModel");
-const mongoose = require('mongoose');
-const escapeStringRegexp = require('escape-string-regexp');
 
 // Get all categories - retrieves all categories from the database
 const getAllCategories = async (req, res) => {
@@ -15,70 +13,35 @@ const getAllCategories = async (req, res) => {
 // Add new category - creates a new category in the database
 const addCategory = async (req, res) => {
   try {
-    // Whitelist allowed fields to prevent users from injecting unexpected properties
-    const allowed = ['name', 'description', 'image'];
-    const payload = {};
-    for (const key of allowed) {
-      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
-        payload[key] = req.body[key];
-      }
-    }
-
-    const newCategory = new CategoryModel(payload);
-    await newCategory.save();
-    res.send('Category added successfully');
+    const newCategory = new CategoryModel(req.body); // Create new category instance with request body
+    await newCategory.save(); // Save the new category to database
+    res.send('Category added successfully'); // Send success message
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json(error); // Send error response if operation fails
   }
 };
 
 // Update category - modifies an existing category by ID
 const updateCategory = async (req, res) => {
   try {
-    const { _id } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(_id)) {
-      return res.status(400).json({ error: 'Invalid category id' });
-    }
-
-    // Whitelist allowed update fields
-    const allowed = ['name', 'description', 'image'];
-    const updates = {};
-    for (const key of allowed) {
-      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
-        updates[key] = req.body[key];
-      }
-    }
-
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({ error: 'No valid fields to update' });
-    }
-
     await CategoryModel.findOneAndUpdate(
-      { _id },
-      updates,
-      { new: true, runValidators: true }
+      { _id: req.params._id }, // Find category by ID from URL parameter
+      req.body, // Update with data from request body
+      { new: true, runValidators: true } // Return updated document and validate data
     );
-
-    res.send('Category updated successfully');
+    res.send("Category updated successfully"); // Send success message
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error.message }); // Send error response with message
   }
 };
 
 // Delete category - removes a category by ID
 const deleteCategory = async (req, res) => {
   try {
-    const { _id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(_id)) {
-      return res.status(400).json({ error: 'Invalid category id' });
-    }
-
-    await CategoryModel.findOneAndDelete({ _id });
-    res.send('Category deleted successfully');
+    await CategoryModel.findOneAndDelete({ _id: req.params._id }); // Find and delete category by ID
+    res.send("Category deleted successfully"); // Send success message
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error.message }); // Send error response with message
   }
 };
 
@@ -90,14 +53,11 @@ const searchCategories = async (req, res) => {
       return res.status(400).json({ error: "Search query is required" }); // Validate query exists
     }
 
-    // Escape the user input before using in regex to avoid regex injection
-    const safeQ = escapeStringRegexp(q);
-
     // Search for categories where name or description contains the query (case-insensitive)
     const categories = await CategoryModel.find({
       $or: [
-        { name: { $regex: safeQ, $options: 'i' } }, // Case-insensitive search on name
-        { description: { $regex: safeQ, $options: 'i' } } // Case-insensitive search on description
+        { name: { $regex: q, $options: 'i' } }, // Case-insensitive search on name
+        { description: { $regex: q, $options: 'i' } } // Case-insensitive search on description
       ]
     }).limit(10); // Limit results to 10 categories
 
