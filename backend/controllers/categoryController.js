@@ -1,58 +1,30 @@
 const CategoryModel = require("../models/categoriesModel");
-
-// Validation schema for category data
-const validateCategory = (data) => {
-  const errors = [];
-  
-  // Validate name
-  if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
-    errors.push('Name is required and must be a non-empty string');
-  } else if (data.name.length > 50) {
-    errors.push('Name must be less than 50 characters');
-  }
-  
-  // Validate description (optional)
-  if (data.description && typeof data.description !== 'string') {
-    errors.push('Description must be a string');
-  } else if (data.description && data.description.length > 200) {
-    errors.push('Description must be less than 200 characters');
-  }
-  
-  // Validate status (optional)
-  if (data.status && !['active', 'inactive'].includes(data.status)) {
-    errors.push('Status must be either "active" or "inactive"');
-  }
-  
-  return errors;
-};
+const mongoose = require('mongoose');
+const escapeStringRegexp = require('escape-string-regexp');
 
 // Get all categories - retrieves all categories from the database
 const getAllCategories = async (req, res) => {
   try {
-    const categories = await CategoryModel.find();
-    res.send(categories);
+    const categories = await CategoryModel.find(); // Fetch all documents from categories collection
+    res.send(categories); // Send categories array as response
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json(error); // Send error response with status code 400
   }
 };
 
 // Add new category - creates a new category in the database
 const addCategory = async (req, res) => {
   try {
-    // Validate input data
-    const validationErrors = validateCategory(req.body);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ errors: validationErrors });
+    // Whitelist allowed fields to prevent users from injecting unexpected properties
+    const allowed = ['name', 'description', 'image'];
+    const payload = {};
+    for (const key of allowed) {
+      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+        payload[key] = req.body[key];
+      }
     }
-    
-    // Create safe data object with only allowed fields
-    const safeData = {
-      name: req.body.name.trim(),
-      description: req.body.description ? req.body.description.trim() : '',
-      status: req.body.status || 'active'
-    };
-    
-    const newCategory = new CategoryModel(safeData);
+
+    const newCategory = new CategoryModel(payload);
     await newCategory.save();
     res.send('Category added successfully');
   } catch (error) {
@@ -63,29 +35,33 @@ const addCategory = async (req, res) => {
 // Update category - modifies an existing category by ID
 const updateCategory = async (req, res) => {
   try {
-    // Validate input data
-    const validationErrors = validateCategory(req.body);
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ errors: validationErrors });
+    const { _id } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      return res.status(400).json({ error: 'Invalid category id' });
     }
-    
-    // Create safe update object with only allowed fields
-    const safeUpdate = {};
-    if (req.body.name) safeUpdate.name = req.body.name.trim();
-    if (req.body.description) safeUpdate.description = req.body.description.trim();
-    if (req.body.status) safeUpdate.status = req.body.status;
-    
-    const updatedCategory = await CategoryModel.findOneAndUpdate(
-      { _id: req.params._id },
-      safeUpdate,
+
+    // Whitelist allowed update fields
+    const allowed = ['name', 'description', 'image'];
+    const updates = {};
+    for (const key of allowed) {
+      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+        updates[key] = req.body[key];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    await CategoryModel.findOneAndUpdate(
+      { _id },
+      updates,
       { new: true, runValidators: true }
     );
-    
-    if (!updatedCategory) {
-      return res.status(404).json({ error: "Category not found" });
-    }
-    
-    res.send("Category updated successfully");
+
+    res.send('Category updated successfully');
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -94,13 +70,13 @@ const updateCategory = async (req, res) => {
 // Delete category - removes a category by ID
 const deleteCategory = async (req, res) => {
   try {
-    const deletedCategory = await CategoryModel.findOneAndDelete({ _id: req.params._id });
-    
-    if (!deletedCategory) {
-      return res.status(404).json({ error: "Category not found" });
+    const { _id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      return res.status(400).json({ error: 'Invalid category id' });
     }
-    
-    res.send("Category deleted successfully");
+
+    await CategoryModel.findOneAndDelete({ _id });
+    res.send('Category deleted successfully');
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -109,24 +85,25 @@ const deleteCategory = async (req, res) => {
 // Search categories - finds categories by name or description
 const searchCategories = async (req, res) => {
   try {
-    const { q } = req.query;
-    if (!q || typeof q !== 'string' || q.trim().length === 0) {
-      return res.status(400).json({ error: "Valid search query is required" });
+    const { q } = req.query; // Extract search query from URL parameters
+    if (!q) {
+      return res.status(400).json({ error: "Search query is required" }); // Validate query exists
     }
 
-    // Sanitize search query to prevent regex injection
-    const sanitizedQuery = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
+    // Escape the user input before using in regex to avoid regex injection
+    const safeQ = escapeStringRegexp(q);
+
+    // Search for categories where name or description contains the query (case-insensitive)
     const categories = await CategoryModel.find({
       $or: [
-        { name: { $regex: sanitizedQuery, $options: 'i' } },
-        { description: { $regex: sanitizedQuery, $options: 'i' } }
+        { name: { $regex: safeQ, $options: 'i' } }, // Case-insensitive search on name
+        { description: { $regex: safeQ, $options: 'i' } } // Case-insensitive search on description
       ]
-    }).limit(10);
+    }).limit(10); // Limit results to 10 categories
 
-    res.send(categories);
+    res.send(categories); // Send matching categories as response
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json(error); // Send error response if search fails
   }
 };
 
