@@ -1,6 +1,6 @@
 const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
-const fs = require('fs');
+const fs = require('node:fs');
 
 // ChromeDriver setup
 async function createDriver() {
