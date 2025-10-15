@@ -223,10 +223,7 @@
   .chart-card .ant-table-container {
     overflow-x: auto;
   }
-  
-  .chart-card .ant-table {
-    min-width: 500px; /* Force horizontal scroll for very small screens */
-  }
+
   
   .progress-label {
     flex-direction: column;

@@ -4,44 +4,102 @@ const CategoryModel = require("../models/categoriesModel");
 const getAllCategories = async (req, res) => {
   try {
     const categories = await CategoryModel.find(); // Fetch all documents from categories collection
-    res.send(categories); // Send categories array as response
+    res.json(categories); // Send categories array as JSON response
   } catch (error) {
-    res.status(400).json(error); // Send error response with status code 400
+    console.error('Get categories error:', error.message); // Log error for debugging
+    res.status(500).json({ error: "Internal server error" }); // Generic error message
   }
 };
 
 // Add new category - creates a new category in the database
 const addCategory = async (req, res) => {
   try {
-    const newCategory = new CategoryModel(req.body); // Create new category instance with request body
+    // Input validation
+    const { name, description } = req.body;
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: "Valid category name is required" });
+    }
+
+    const newCategory = new CategoryModel({
+      name: name.trim(),
+      description: description ? description.trim() : undefined
+    });
+    
     await newCategory.save(); // Save the new category to database
-    res.send('Category added successfully'); // Send success message
+    res.status(201).json({ message: 'Category added successfully', category: newCategory }); // Send success message with created category
   } catch (error) {
-    res.status(400).json(error); // Send error response if operation fails
+    console.error('Add category error:', error.message);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: error.message });
+    }
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // Update category - modifies an existing category by ID
 const updateCategory = async (req, res) => {
   try {
-    await CategoryModel.findOneAndUpdate(
-      { _id: req.params._id }, // Find category by ID from URL parameter
-      req.body, // Update with data from request body
+    // Validate ID parameter
+    const categoryId = req.params._id;
+    if (!categoryId || categoryId.length !== 24) { // MongoDB ObjectId validation
+      return res.status(400).json({ error: "Valid category ID is required" });
+    }
+
+    // Input validation for update data
+    const updateData = { ...req.body };
+    if (updateData.name && (typeof updateData.name !== 'string' || updateData.name.trim().length === 0)) {
+      return res.status(400).json({ error: "Valid category name is required" });
+    }
+
+    // Clean update data
+    if (updateData.name) updateData.name = updateData.name.trim();
+    if (updateData.description) updateData.description = updateData.description.trim();
+
+    const updatedCategory = await CategoryModel.findOneAndUpdate(
+      { _id: categoryId }, // Find category by ID from URL parameter
+      updateData, // Update with validated data
       { new: true, runValidators: true } // Return updated document and validate data
     );
-    res.send("Category updated successfully"); // Send success message
+
+    if (!updatedCategory) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    res.json({ message: "Category updated successfully", category: updatedCategory }); // Send success message with updated category
   } catch (error) {
-    res.status(400).json({ error: error.message }); // Send error response with message
+    console.error('Update category error:', error.message);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error.name === 'CastError') {
+      return res.status(400).json({ error: "Invalid category ID" });
+    }
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // Delete category - removes a category by ID
 const deleteCategory = async (req, res) => {
   try {
-    await CategoryModel.findOneAndDelete({ _id: req.params._id }); // Find and delete category by ID
-    res.send("Category deleted successfully"); // Send success message
+    // Validate ID parameter
+    const categoryId = req.params._id;
+    if (!categoryId || categoryId.length !== 24) { // MongoDB ObjectId validation
+      return res.status(400).json({ error: "Valid category ID is required" });
+    }
+
+    const deletedCategory = await CategoryModel.findOneAndDelete({ _id: categoryId }); // Find and delete category by ID
+    
+    if (!deletedCategory) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    res.json({ message: "Category deleted successfully" }); // Send success message
   } catch (error) {
-    res.status(400).json({ error: error.message }); // Send error response with message
+    console.error('Delete category error:', error.message);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ error: "Invalid category ID" });
+    }
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -49,21 +107,29 @@ const deleteCategory = async (req, res) => {
 const searchCategories = async (req, res) => {
   try {
     const { q } = req.query; // Extract search query from URL parameters
-    if (!q) {
-      return res.status(400).json({ error: "Search query is required" }); // Validate query exists
+    
+    // Input validation and sanitization
+    if (!q || typeof q !== 'string' || q.trim().length === 0) {
+      return res.status(400).json({ error: "Valid search query is required" });
     }
 
+    const searchQuery = q.trim();
+    
+    // Prevent regex injection by escaping special characters
+    const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
     // Search for categories where name or description contains the query (case-insensitive)
     const categories = await CategoryModel.find({
       $or: [
-        { name: { $regex: q, $options: 'i' } }, // Case-insensitive search on name
-        { description: { $regex: q, $options: 'i' } } // Case-insensitive search on description
+        { name: { $regex: escapedQuery, $options: 'i' } }, // Case-insensitive search on name
+        { description: { $regex: escapedQuery, $options: 'i' } } // Case-insensitive search on description
       ]
     }).limit(10); // Limit results to 10 categories
 
-    res.send(categories); // Send matching categories as response
+    res.json(categories); // Send matching categories as JSON response
   } catch (error) {
-    res.status(400).json(error); // Send error response if search fails
+    console.error('Search categories error:', error.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
