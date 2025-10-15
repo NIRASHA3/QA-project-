@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
         with:
           fetch-depth: 0
 
@@ -34,12 +34,13 @@ jobs:
         run: npm run test --prefix backend -- --coverage --coverageDirectory=coverage --watchAll=false
 
       - name: Run client tests (coverage)
-        # For Create React App, set CI=true and disable watch mode so tests exit in CI
-        run: $env:CI = 'true'; npm run test --prefix client -- --coverage --watchAll=false
+        run: |
+          export CI=true
+          npm run test --prefix client -- --coverage --watchAll=false
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v2.0.0
+        uses: SonarSource/sonarqube-scan-action@e4a108785d0d4e97f631cb2a7a74e4dabc5ad209  # v2.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} 
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
